@@ -66,13 +66,17 @@ void main() {
     vec3 color1 = vec3(0.);
     vec3 color2 = vec3(1.);
 
-    float div = 2.;
+    float div = 1.;
+    
+    
     vec2 i = floor(st/vec2(1./(2.*div),1.));
     float even = step(1.,mod(i.x,2.));
     st = mod(st*vec2(2.*div,1.),1.) / vec2((div) , 1.) + (vec2(i.x-even,i.y))/(div*2.);
     
-    float scale = 1.;
+    vec2 scale = vec2(1.,2.);
     st *= scale;
+    // st *= 2.;
+    st -= vec2(0.,0.5);
     
 
     
@@ -91,7 +95,7 @@ void main() {
     }
     
 	float shift = 0.;
-    float height = -0.01;
+    float height = 0.01;
     shift = circle(st,0.3,vec2(0.5+height,0.5));
     
     color1 = vec3(sin(y*234.))+shift;
