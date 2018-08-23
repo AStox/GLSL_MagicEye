@@ -18,24 +18,12 @@ float noise(vec2 st)
     float m_dist = 0.;
     for (int y= -1; y <= 1; y++) {
         for (int x= -1; x <= 1; x++) {
-            // Neighbor place in the grid
             vec2 neighbor = vec2(float(x),float(y));
-
-            // Random position from current + neighbor place in the grid
             vec2 point = random2(i_st + neighbor);
-
-			// Animate the point
             point = 0.5 + 0.5*sin(8.211*point);
-
-			// Vector between the pixel and the point
             vec2 diff = neighbor + point - f_st;
-
-            // Distance to the point
             float dist = smoothstep(0.,1.,length(diff));
-
             m_dist += (dist);
-            // Keep the closer distance
-            // m_dist = min(m_dist, dist);
         }
     }
     st = gl_FragCoord.xy/u_resolution.xy;
@@ -58,6 +46,22 @@ float circle(in vec2 _st, in float _radius, in vec2 center){
 //     return color;
 // }
 
+float brownianNoise(vec2 st){
+    const int octaves = 3;
+    float lacunarity = 2.1;
+    float gain = 0.4;
+    float amplitude = 0.5;
+    float frequency = 1.;
+	float y;
+
+    for (int i = 0; i < octaves; i++) {
+        y += amplitude * noise(frequency*st*4.);
+        frequency *= lacunarity;
+        amplitude *= gain;
+    }
+    return y;
+}
+
 void main() {
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
     st.x *= u_resolution.x/u_resolution.y;
@@ -66,88 +70,41 @@ void main() {
     vec3 color1 = vec3(0.);
     vec3 color2 = vec3(1.);
 
-    float div = 1.;
+    float div = 6.;
     
     
-    vec2 i = floor(st/vec2(1./(2.*div),1.));
-    float even = step(1.,mod(i.x,2.));
-    st = mod(st*vec2(2.*div,1.),1.) / vec2((div) , 1.) + (vec2(i.x-even,i.y))/(div*2.);
-    
-    vec2 scale = vec2(1.,2.);
-    st *= scale;
-    // st *= 2.;
-    st -= vec2(0.,0.5);
-    
+    vec2 i = floor(st/vec2(1./(div),1.));
+    vec2 f = fract(st/vec2(1./(div),1.));
 
+    st = f;
     
-    const int octaves = 3;
-    float lacunarity = 2.1;
-    float gain = 0.4;
-    float amplitude = 0.5;
-    float frequency = 1.;
-	float y;
+    
+    //ADDS A SECOND IMAGE FOR DIRDS
+    // float even = step(1.,mod(i.x,2.));
+    // st = mod(st*vec2(2.*div,1.),1.) / vec2((div) , 1.) + (vec2(i.x-even,i.y))/(div*2.);
+    
+    
+	
 
-    // st = mod(st,vec2(scale/2.,scale));
-    for (int i = 0; i < octaves; i++) {
-        y += amplitude * noise(frequency*st*4.);
-        frequency *= lacunarity;
-        amplitude *= gain;
-    }
+    // for (int i = 0; i < octaves; i++) {
+    //     y += amplitude * noise(frequency*st*4.);
+    //     frequency *= lacunarity;
+    //     amplitude *= gain;
+    // }
     
-	float shift = 0.;
+	float image = 0.;
     float height = 0.01;
-    shift = circle(st,0.3,vec2(0.5+height,0.5));
     
-    color1 = vec3(sin(y*234.))+shift;
+    st = gl_FragCoord.xy/u_resolution.xy;
     
-    shift = circle(st,0.3,vec2(0.5-height,0.5));
-
-    color2 = vec3(sin(y*234.))+shift;
-
+    image = step(0.5,circle(st,0.3,vec2(0.5+height,0.5)));
+    color1 = vec3(sin(brownianNoise(f)*234.))+image;
     
-//     st = gl_FragCoord.xy/u_resolution.xy;
-
-    // float shift = 0.;
-    // float height = 0.05;
-    // shift = circle(st,0.1,vec2(0.25-height,0.5));
-//     st = mod(st*scale,vec2(scale/2.,scale));
-//     st += vec2(-height,0.);
-//     amplitude = 0.5;
-//     frequency = 1.;
-// 	y = 0.;
-
-//     for (int i = 0; i < octaves; i++) {
-//         y += amplitude * noise(frequency*st);
-//         frequency *= lacunarity;
-//         amplitude *= gain;
-//     }
-//     color1 = vec3(sin(y*234.)) + shift;
-    
-    
-    
-    
-    
-    
-    
-//     st = gl_FragCoord.xy/u_resolution.xy;
-
-//     shift = 0.;
-//     shift += circle(st,0.1,vec2(0.75+height,0.5));
-//     st = mod(st*scale,vec2(scale/2.,scale));
-//     st += vec2(height,0.);
-//     amplitude = 0.5;
-//     frequency = 1.;
-// 	y = 0.;
-
-//     for (int i = 0; i < octaves; i++) {
-//         y += amplitude * noise(frequency*st);
-//         frequency *= lacunarity;
-//         amplitude *= gain;
-//     }
-//     color2 = vec3(sin(y*234.)) * shift + color * (1.-shift);
-
-    color = vec3(st,0.);
-    color = step(1.,mod(i.x,2.))*color2 + (1.-step(1.,mod(i.x,2.)))*color1;
-    // color = color1;
+    // ALTERNATING IMAGES USED FOR DIRDS
+    // shift = circle(st,0.3,vec2(0.5-height,0.5));
+    // color2 = vec3(sin(y*234.))+shift;
+    // color = step(1.,mod(i.x,2.))*color2 + (1.-step(1.,mod(i.x,2.)))*color1;
+	
+    color = color1;
     gl_FragColor = vec4(color,1.0);
 }
